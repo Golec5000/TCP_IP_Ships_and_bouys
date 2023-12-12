@@ -76,6 +76,8 @@ public class ShipController extends MessageCenter implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
+
         scanTextArea.setEditable(false);
         connectStatus.setText("No connection");
         positionLabel.setText("");

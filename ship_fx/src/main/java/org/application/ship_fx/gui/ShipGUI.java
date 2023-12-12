@@ -15,6 +15,7 @@ public class ShipGUI extends Application {
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/org/application/ship_fx/ship/ship-view.fxml")));
         Scene scene = new Scene(root);
         stage.setTitle("Ship");
+        stage.setResizable(false);
         stage.setScene(scene);
         stage.show();
 

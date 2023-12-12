@@ -17,6 +17,7 @@ public class SeaGUI extends Application {
         Scene scene = new Scene(root);
         stage.setTitle("Sea");
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.show();
         stage.setOnCloseRequest(e -> {
             try {
