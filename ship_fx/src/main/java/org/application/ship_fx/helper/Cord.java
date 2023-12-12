@@ -1,24 +1,21 @@
 package org.application.ship_fx.helper;
 
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
-public class Cord extends Rectangle {
+public class Cord {
 
     private final int cellSize = 20;
     private int xCord;
     private int yCord;
 
+    private Color color;
+
     public Cord(int xCord, int yCord) {
         super();
         setxCord(xCord);
         setyCord(yCord);
-        setLayoutX(xCord * cellSize);
-        setLayoutY(yCord * cellSize);
-        setWidth(cellSize);
-        setHeight(cellSize);
-        setFill(Color.BLUE);
-        setStroke(Color.BLACK);
+        setColor(Color.BLUE);
+
     }
 
     public int getxCord() {
@@ -35,5 +32,13 @@ public class Cord extends Rectangle {
 
     public void setyCord(int yCord) {
         this.yCord = yCord;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 }

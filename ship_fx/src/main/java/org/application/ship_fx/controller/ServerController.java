@@ -1,5 +1,6 @@
 package org.application.ship_fx.controller;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -60,8 +61,12 @@ public class ServerController extends MessageCenter implements Initializable {
             //nasłuchiwanie na portach
             while (isRunning) {
                 String command = receiveMessage();
-                addLog(command);
-                commands.add(command);
+                if (command != null) {
+                    addLog(command);
+                    commands.add(command);
+                } else {
+                    System.out.println("Received null message");
+                }
             }
 
         }).start();
@@ -82,7 +87,8 @@ public class ServerController extends MessageCenter implements Initializable {
                     msgType = temp[0];
                     try {
                         portToSend = Integer.parseInt(temp[1]);
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {
+                    }
 
                     switch (msgType) {
                         case "creatShip" -> {
@@ -93,9 +99,61 @@ public class ServerController extends MessageCenter implements Initializable {
                             addLog(newCommand);
                             sendMessage("creat", newCommand, portToSend);
                             //odpowiedź do świata
-                            //sendMessage("creat",newCommand,uniqPortForWorld);
+                            sendMessage("creat", newCommand, uniqPortForSea);
 
                         }
+
+                        case "creatWorld" -> {
+                            uniqPortForSea = portToSend;
+                            addLog("World created");
+                        }
+
+                        case "ShipMove" -> {
+
+                            //   0                  1          2         3
+                            //"ShipMove" + "# " + port + "," + x + "," + y
+                            newCommand = temp[1] + "," + temp[2] + "," + temp[3];
+                            addLog(newCommand);
+                            sendMessage("move", newCommand, uniqPortForSea);
+
+                        }
+                        case "doneMove" -> {
+
+                            //     0                 1                      2                       3
+                            //"doneMove" + "#" +ship.getId() + "," + ship.getxCord() + "," + ship.getyCord();
+                            try {
+
+                                portToSend = Integer.parseInt(temp[1]);
+
+                            } catch (NumberFormatException ignored) {
+                            }
+
+                            newCommand = temp[1] + "," + temp[2] + "," + temp[3];
+                            addLog(newCommand);
+                            sendMessage("doneMove", newCommand, portToSend);
+
+                        }
+                        case "scan" ->{
+
+                            //   0          1
+                            //"scan" + # + port
+                            addLog("scan#" + port);
+                            sendMessage("scan",temp[1],uniqPortForSea);
+
+                        }
+
+                        case "doneScan" ->{
+
+                            //    0               1              2
+                            //"doneScan" + "#" + port + "$" + scanresult
+                            newCommand = temp[1] + "$" + temp[2];
+                            addLog(newCommand);
+                            sendMessage("doneScan",newCommand, portToSend);
+                        }
+
+                        case "collision" -> collider(temp[1]);
+
+                        default -> addLog("unknown command");
 
                     }
 
@@ -108,7 +166,20 @@ public class ServerController extends MessageCenter implements Initializable {
     }
 
     private void addLog(String log) {
-        serverLogs.appendText(log + "\n");
+        Platform.runLater(() -> serverLogs.appendText(log + "\n"));
+    }
+
+    private void collider(String command){
+        String[] temp = command.split("%");
+
+        for (String s : temp) {
+            System.out.println(s + " -> dead");
+            try {
+                sendMessage("dead", s, Integer.parseInt(s));
+
+            } catch (NumberFormatException ignored) {}
+        }
+
     }
 
     public void stop() {

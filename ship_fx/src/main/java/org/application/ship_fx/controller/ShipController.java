@@ -81,15 +81,16 @@ public class ShipController extends MessageCenter implements Initializable {
         positionLabel.setText("");
         disconnectButton.setDisable(true);
 
+        setButtons(true);
 
-        nButton.setOnAction(e -> moving(0, 1));
+        nButton.setOnAction(e -> moving(0, -1));
         eButton.setOnAction(e -> moving(1, 0));
-        sButton.setOnAction(e -> moving(0, -1));
+        sButton.setOnAction(e -> moving(0, 1));
         wButton.setOnAction(e -> moving(-1, 0));
-        neButton.setOnAction(e -> moving(1, 1));
-        nwButton.setOnAction(e -> moving(-1, 1));
-        seButton.setOnAction(e -> moving(1, -1));
-        swButton.setOnAction(e -> moving(-1, -1));
+        neButton.setOnAction(e -> moving(1, -1));
+        nwButton.setOnAction(e -> moving(-1, -1));
+        seButton.setOnAction(e -> moving(1, 1));
+        swButton.setOnAction(e -> moving(-1, 1));
 
         scanButton.setOnAction(e -> sendMessage("scan", String.valueOf(port), sendingPort));
 
@@ -117,6 +118,8 @@ public class ShipController extends MessageCenter implements Initializable {
             connectButton.setDisable(true);
             disconnectButton.setDisable(false);
 
+            setButtons(false);
+
             sendMessage("creatShip", String.valueOf(port), sendingPort);
 
             startOperations();
@@ -131,7 +134,12 @@ public class ShipController extends MessageCenter implements Initializable {
         new Thread(() -> {
 
             while (isRunning) {
-                commands.add(receiveMessage());
+                String command = receiveMessage();
+                if (command != null) {
+                    commands.add(command);
+                } else {
+                    System.out.println("Received null message");
+                }
             }
 
         }).start();
@@ -142,14 +150,20 @@ public class ShipController extends MessageCenter implements Initializable {
 
                 try {
                     String command = commands.take();
-                    String[] temp = command.split("[#,$%]");
+                    String[] temp = command.split("[#,$%@]");
 
                     System.out.println(Arrays.toString(temp));
 
                     switch (temp[0]) {
 
-                        case "doneScan" -> scanTextArea.appendText(temp[2] + "\n");
+                        case "doneScan" -> {
 
+                            scanTextArea.clear();
+
+                            for (int i = 3; i < temp.length; i += 3)
+                                scanTextArea.appendText(temp[i] + " ->  x: " + temp[i + 1] + " y: " + temp[i + 2] + "\n");
+
+                        }
                         case "creat" -> {
                             //                0                1                    2                 3
                             //newCommand = "creat" + "#" + cord.getX() + "," + cord.getY() + "%" + newPort;
@@ -161,6 +175,8 @@ public class ShipController extends MessageCenter implements Initializable {
                                     positionLabel.setText("Position: " + xCord + " " + yCord);
                                     connectStatus.setText("Connected");
                                 });
+
+                                setButtons(false);
 
                             } catch (NumberFormatException ignored) {
                             }
@@ -180,6 +196,23 @@ public class ShipController extends MessageCenter implements Initializable {
                             }
                         }
 
+                        case "dead" -> {
+
+                            Platform.runLater(() -> {
+                                disconnectButton.setDisable(true);
+                                connectButton.setDisable(false);
+                                connectStatus.setText("No connection");
+                            });
+
+                            setButtons(true);
+
+                            try {
+                                serverSocket.close();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
                     }
 
                 } catch (InterruptedException e) {
@@ -192,7 +225,7 @@ public class ShipController extends MessageCenter implements Initializable {
 
     }
 
-    public void moving(int x, int y) {
+    private void moving(int x, int y) {
         String msgToSend = port + "," + x + "," + y;
         sendMessage("ShipMove", msgToSend, sendingPort);
     }
@@ -208,10 +241,26 @@ public class ShipController extends MessageCenter implements Initializable {
             return true;
         }
     }
+
     public void stop() {
         isRunning = false;
         Stage stage = (Stage) mainScene.getScene().getWindow();
         stage.close();
+    }
+
+    private void setButtons(boolean value) {
+
+        Platform.runLater(() -> {
+            nButton.setDisable(value);
+            eButton.setDisable(value);
+            sButton.setDisable(value);
+            wButton.setDisable(value);
+            neButton.setDisable(value);
+            nwButton.setDisable(value);
+            seButton.setDisable(value);
+            swButton.setDisable(value);
+            scanButton.setDisable(value);
+        });
     }
 
 }

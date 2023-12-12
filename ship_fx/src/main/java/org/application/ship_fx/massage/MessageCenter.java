@@ -18,7 +18,7 @@ public abstract class MessageCenter {
 
             PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
 
-          System.out.println(flagType + "#" + message);
+            System.out.println(flagType + "#" + message);
             output.println(flagType + "#" + message);
 
             output.close();
@@ -36,7 +36,7 @@ public abstract class MessageCenter {
 
     public String receiveMessage() {
         String newMsg = null;
-        try{
+        try {
 
             Socket s = serverSocket.accept();
             BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -46,10 +46,10 @@ public abstract class MessageCenter {
             input.close();
             s.close();
 
-        } catch (ConnectException | BindException e){
+        } catch (ConnectException | BindException e) {
             System.out.println("Server is not running");
             System.out.println(e.getMessage());
-        } catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Error in sending message");
             System.out.println(e.getMessage());
         }
