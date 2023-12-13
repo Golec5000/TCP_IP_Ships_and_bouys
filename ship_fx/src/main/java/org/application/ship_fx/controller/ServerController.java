@@ -17,6 +17,8 @@ import java.net.URL;
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -37,11 +39,14 @@ public class ServerController extends MessageCenter implements Initializable {
     private boolean isRunning = true;
     private MapOfSea map;
 
+    private ExecutorService executorService;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         serverLogs.setEditable(false);
         map = new MapOfSea();
+        executorService = Executors.newFixedThreadPool(2);
 
         try {
             serverSocket = new ServerSocket(6666);
@@ -56,7 +61,7 @@ public class ServerController extends MessageCenter implements Initializable {
     }
 
     private void startOperations() {
-        new Thread(() -> {
+        executorService.submit(() -> {
 
             //nasłuchiwanie na portach
             while (isRunning) {
@@ -69,9 +74,9 @@ public class ServerController extends MessageCenter implements Initializable {
                 }
             }
 
-        }).start();
+        });
 
-        new Thread(() -> {
+        executorService.submit(() -> {
 
             while (isRunning) {
 
@@ -94,7 +99,7 @@ public class ServerController extends MessageCenter implements Initializable {
                         case "creatShip" -> {
 
                             Cord cord = map.getCells().get(new Random().nextInt(map.getCells().size()));
-                            newCommand = cord.getxCord() + "," + cord.getxCord() + "%" + portToSend;
+                            newCommand = cord.getxCord() + "," + cord.getyCord() + "$" + portToSend;
 //                          //odpowiedź do statku
                             addLog(newCommand);
                             sendMessage("creat", newCommand, portToSend);
@@ -162,7 +167,7 @@ public class ServerController extends MessageCenter implements Initializable {
                 }
 
             }
-        }).start();
+        });
     }
 
     private void addLog(String log) {
@@ -185,6 +190,12 @@ public class ServerController extends MessageCenter implements Initializable {
     public void stop() {
         isRunning = false;
         Stage stage = (Stage) mainScene.getScene().getWindow();
+        executorService.shutdownNow();
         stage.close();
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

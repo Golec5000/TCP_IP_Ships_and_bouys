@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -69,6 +71,8 @@ public class ShipController extends MessageCenter implements Initializable {
 
     private final BlockingQueue<String> commands = new LinkedBlockingQueue<>();
 
+    private ExecutorService executorService;
+
     private final int sendingPort = 6666;
     private int xCord;
     private int yCord;
@@ -84,6 +88,8 @@ public class ShipController extends MessageCenter implements Initializable {
         disconnectButton.setDisable(true);
 
         setButtons(true);
+
+        executorService = Executors.newFixedThreadPool(2);
 
         nButton.setOnAction(e -> moving(0, -1));
         eButton.setOnAction(e -> moving(1, 0));
@@ -133,9 +139,10 @@ public class ShipController extends MessageCenter implements Initializable {
     private void startOperations() {
 
         //nasłuchiwanie na portach
-        new Thread(() -> {
+        executorService.submit(() -> {
 
             while (isRunning) {
+                if (serverSocket.isClosed()) continue;
                 String command = receiveMessage();
                 if (command != null) {
                     commands.add(command);
@@ -144,9 +151,9 @@ public class ShipController extends MessageCenter implements Initializable {
                 }
             }
 
-        }).start();
+        });
 
-        new Thread(() -> {
+        executorService.submit(() -> {
 
             while (isRunning) {
 
@@ -223,7 +230,7 @@ public class ShipController extends MessageCenter implements Initializable {
 
             }
 
-        }).start();
+        });
 
     }
 
@@ -246,8 +253,14 @@ public class ShipController extends MessageCenter implements Initializable {
 
     public void stop() {
         isRunning = false;
+        executorService.shutdownNow();
         Stage stage = (Stage) mainScene.getScene().getWindow();
         stage.close();
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void setButtons(boolean value) {
