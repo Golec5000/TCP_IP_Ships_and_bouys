@@ -11,13 +11,11 @@ import javafx.stage.Stage;
 import org.application.ship_fx.helper.Buoy;
 import org.application.ship_fx.helper.HelperShip;
 import org.application.ship_fx.helper.MapOfSea;
-import org.application.ship_fx.helper.Waves;
 import org.application.ship_fx.massage.MessageCenter;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -34,16 +32,13 @@ public class SeaController extends MessageCenter implements Initializable {
 
     private final int gridSize = 40;
     private final int cellSize = 20;
-    private MapOfSea mapOfSea;
+    private final MapOfSea mapOfSea = new MapOfSea();
     private final BlockingQueue<String> commands = new LinkedBlockingQueue<>();
     private final ConcurrentMap<Integer, HelperShip> ships = new ConcurrentHashMap<>();
     private final ConcurrentMap<Integer, Buoy> buoys = new ConcurrentHashMap<>();
     private final int sendingPort = 6666;
     private boolean isRunning = true;
     private ExecutorService executorService;
-    private final Waves waves = new Waves();
-    private int[][] levelOfSea;
-
     private GraphicsContext gc;
 
     @Override
@@ -56,8 +51,6 @@ public class SeaController extends MessageCenter implements Initializable {
         seaCanvas.setLayoutX(0);
         seaCanvas.setLayoutY(0);
 
-        mapOfSea = new MapOfSea();
-
         createBuoys();
 
         gc = seaCanvas.getGraphicsContext2D();
@@ -69,7 +62,7 @@ public class SeaController extends MessageCenter implements Initializable {
             }
         };
 
-        executorService = Executors.newFixedThreadPool(3);
+        executorService = Executors.newFixedThreadPool(2);
 
         try {
             port = 1000;
@@ -148,9 +141,9 @@ public class SeaController extends MessageCenter implements Initializable {
 
                             try {
 
-                                id = Integer.parseInt(command[3]);
                                 x = Integer.parseInt(command[1]);
                                 y = Integer.parseInt(command[2]);
+                                id = Integer.parseInt(command[3]);
 
                             } catch (NumberFormatException ignored) {
                             }
@@ -158,6 +151,8 @@ public class SeaController extends MessageCenter implements Initializable {
                             if (!ships.containsKey(id)) ships.put(id, new HelperShip(x, y));
 
                             System.out.println(ships.size() + " ships");
+
+                            depthOfBuoys();
 
                         }
 
@@ -218,6 +213,9 @@ public class SeaController extends MessageCenter implements Initializable {
                             System.out.println(ships.size() + " ships");
 
 
+                            depthOfBuoys();
+
+
                         }
 
                         case "scan" -> {
@@ -226,7 +224,6 @@ public class SeaController extends MessageCenter implements Initializable {
                             try {
                                 id = Integer.parseInt(command[1]);
                             } catch (NumberFormatException e) {
-                                System.out.println("Failed to parse ship ID from command: " + command[1]);
                                 System.out.println(e.getMessage());
                             }
 
@@ -238,8 +235,6 @@ public class SeaController extends MessageCenter implements Initializable {
 
                             sendMessage("doneScan", id + "$" + temp, sendingPort);
                         }
-
-                        case "buoys" -> createBuoysAction(command[1]);
 
                         default -> System.out.println("Unknown command");
 
@@ -253,6 +248,7 @@ public class SeaController extends MessageCenter implements Initializable {
             }
 
         });
+
 
     }
 
@@ -279,94 +275,14 @@ public class SeaController extends MessageCenter implements Initializable {
 
             }
         }
-
-//        buoys.forEach((key, value) -> System.out.println(key + " " + value.getX() + " " + value.getY()));
-
     }
 
-    private void createBuoysAction(String command) {
-        levelOfSea = new int[gridSize][gridSize];
+    private void depthOfBuoys(){
 
-        ArrayList<ArrayList<Integer>> lvl = getArrayLists(command);
-
-        for(ArrayList<Integer> temp : lvl){
-
-            int x = temp.get(0);
-            int y = temp.get(1);
-
-            for(int i = -2; i < 3; i++){
-
-                x += i;
-
-                for(int j = -2; j < 3; j++){
-
-                    y += j;
-
-                    if(isInBorder(x,y)) levelOfSea[y][x] += waves.getPowerOfWaves()[i+2][j+2];
-
-                    y = temp.get(1);
-                }
-
-                x = temp.get(0);
-            }
-
-        }
-
-//        for(int i = 0; i < 40; i++) {
-//            for (int j = 0; j < 40; j++)
-//                System.out.print(levelOfSea[i][j] + " ");
-//            System.out.println();
-//        }
-
-        //przypisanie wartości zanużeżenia każdej boi
-
-        buoys.forEach((id, buoy) -> buoy.setDepth(levelOfSea[buoy.getY()][buoy.getX()]));
-        buoys.forEach((id, buoy) -> System.out.println(id + " " + buoy.getX() + " " + buoy.getY() + " " + buoy.getDepth()));
+        StringBuilder sb = new StringBuilder();
+        ships.forEach((key, value) -> sb.append(value.cordForBuoys()));
+        sendMessage("buoys",sb.toString(),sendingPort);
 
     }
-
-    private ArrayList<ArrayList<Integer>> getArrayLists(String command) {
-        String[] tempLvl1 = command.split("@");
-        ArrayList<ArrayList<Integer>> lvl = new ArrayList<>();
-
-        //           0                1
-        //"@" + (xCord/20) + "%" + (yCord/20)
-
-        for (String s : tempLvl1) {
-
-            String[] tempLvl2 = s.split("%");
-            ArrayList<Integer> temp = new ArrayList<>();
-
-            try {
-
-                temp.add(Integer.parseInt(tempLvl2[0]));
-                temp.add(Integer.parseInt(tempLvl2[1]));
-
-            } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignored) {
-            }
-
-            lvl.add(temp);
-
-        }
-
-        //usunięcie pierszej pustej tablicy indeksów
-        lvl.removeFirst();
-        return lvl;
-    }
-
-    private boolean isInBorder(int col, int row) {
-        //sprawdzenie czy jest coś pod taki indeksami
-        try {
-            //jest
-            int test = levelOfSea[row][col];
-            return true;
-
-        } catch (ArrayIndexOutOfBoundsException e) {
-            //nie ma
-            return false;
-        }
-
-    }
-
 
 }

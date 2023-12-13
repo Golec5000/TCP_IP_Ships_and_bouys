@@ -25,8 +25,7 @@ public abstract class MessageCenter {
             socket.close();
 
         } catch (ConnectException | BindException e) {
-            System.out.println("Server is not running");
-            throw new RuntimeException(e);
+            System.out.println(e.getMessage());
         } catch (IOException e) {
             System.out.println("Error in sending message");
             System.out.println(e.getMessage());

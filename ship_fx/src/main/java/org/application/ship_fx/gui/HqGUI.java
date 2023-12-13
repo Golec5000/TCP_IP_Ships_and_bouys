@@ -18,6 +18,13 @@ public class HqGUI extends Application {
         stage.setResizable(false);
         stage.setScene(scene);
         stage.show();
+        stage.setOnCloseRequest(e -> {
+            try {
+                stop();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
     }
 

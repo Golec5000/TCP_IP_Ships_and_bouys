@@ -10,7 +10,7 @@ public class HelperShip {
         this.yCord = y;
     }
     public String cordForBuoys(){
-        return "@" + (xCord/20) + "%" + (yCord/20);
+        return "@" + xCord + "%" + yCord;
     }
     public String scanning(int id){
         return "@" + id + "%" + xCord + "%" + yCord;
