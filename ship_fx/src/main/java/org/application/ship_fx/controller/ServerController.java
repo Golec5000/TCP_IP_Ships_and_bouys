@@ -73,8 +73,6 @@ public class ServerController extends MessageCenter implements Initializable {
                 if (command != null) {
                     addLog(command);
                     commands.add(command);
-                } else {
-                    System.out.println("Received null message");
                 }
             }
 
@@ -147,22 +145,22 @@ public class ServerController extends MessageCenter implements Initializable {
                             sendMessage("doneMove", newCommand, portToSend);
 
                         }
-                        case "scan" ->{
+                        case "scan" -> {
 
                             //   0          1
                             //"scan" + # + port
                             addLog("scan#" + port);
-                            sendMessage("scan",temp[1],uniqPortForSea);
+                            sendMessage("scan", temp[1], uniqPortForSea);
 
                         }
 
-                        case "doneScan" ->{
+                        case "doneScan" -> {
 
                             //    0               1              2
                             //"doneScan" + "#" + port + "$" + scanresult
                             newCommand = temp[1] + "$" + temp[2];
                             addLog(newCommand);
-                            sendMessage("doneScan",newCommand, portToSend);
+                            sendMessage("doneScan", newCommand, portToSend);
                         }
 
                         case "collision" -> collider(temp[1]);
@@ -194,7 +192,7 @@ public class ServerController extends MessageCenter implements Initializable {
                     sb.append(buoy.toString(id));
                 });
                 addLog(sb.toString());
-                sendMessage("buoysLvl",sb.toString(),uniqPortForHQ);
+                sendMessage("buoysLvl", sb.toString(), uniqPortForHQ);
 
             }
 
@@ -205,7 +203,7 @@ public class ServerController extends MessageCenter implements Initializable {
         Platform.runLater(() -> serverLogs.appendText(log + "\n"));
     }
 
-    private void collider(String command){
+    private void collider(String command) {
         String[] temp = command.split("%");
 
         for (String s : temp) {
@@ -213,7 +211,8 @@ public class ServerController extends MessageCenter implements Initializable {
             try {
                 sendMessage("dead", s, Integer.parseInt(s));
 
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         }
 
     }
@@ -234,20 +233,20 @@ public class ServerController extends MessageCenter implements Initializable {
 
         ArrayList<ArrayList<Integer>> lvl = getArrayLists(command);
 
-        for(ArrayList<Integer> temp : lvl){
+        for (ArrayList<Integer> temp : lvl) {
 
             int x = temp.get(0);
             int y = temp.get(1);
 
-            for(int i = -2; i < 3; i++){
+            for (int i = -2; i < 3; i++) {
 
                 x += i;
 
-                for(int j = -2; j < 3; j++){
+                for (int j = -2; j < 3; j++) {
 
                     y += j;
 
-                    if(isInBorder(x,y)) levelOfSea[y][x] += waves.getPowerOfWaves()[i+2][j+2];
+                    if (isInBorder(x, y)) levelOfSea[y][x] += waves.getPowerOfWaves()[i + 2][j + 2];
 
                     y = temp.get(1);
                 }

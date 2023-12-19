@@ -31,9 +31,7 @@ public class HQController extends MessageCenter implements Initializable {
     @FXML
     private SplitPane mainScene;
 
-    private final int gridSize = 40;
     private final int cellSize = 20;
-    private final int sendingPort = 6666;
     private ExecutorService executorService;
     private boolean isRunning = true;
     private final BlockingQueue<String> commands = new LinkedBlockingQueue<>();
@@ -55,7 +53,8 @@ public class HQController extends MessageCenter implements Initializable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        sendMessage("creatHQ",String.valueOf(port), sendingPort);
+
+        sendMessage("creatHQ", String.valueOf(port), 6666);
 
         createBuoys();
 
@@ -91,20 +90,18 @@ public class HQController extends MessageCenter implements Initializable {
 
     }
 
-    private void startOperation(){
+    private void startOperation() {
 
-        executorService.submit(() ->{
-            while (isRunning){
+        executorService.submit(() -> {
+            while (isRunning) {
                 String command = receiveMessage();
                 if (command != null) {
                     commands.add(command);
-                } else {
-                    System.out.println("Received null message");
                 }
             }
         });
 
-        executorService.submit(() ->{
+        executorService.submit(() -> {
 
             while (isRunning) {
                 try {
@@ -126,7 +123,7 @@ public class HQController extends MessageCenter implements Initializable {
                             addLog(buoy.logString(id));
 
                             switch (buoy.getDepth()) {
-                                case 0 -> buoy.setColor(Color.color(55/255.0, 68/255.0, 19/255.0));
+                                case 0 -> buoy.setColor(Color.color(55 / 255.0, 68 / 255.0, 19 / 255.0));
                                 case 1, 2 -> buoy.setColor(Color.PINK);
                                 case 3 -> buoy.setColor(Color.ORANGE);
                                 case 4 -> buoy.setColor(Color.RED);
@@ -164,14 +161,15 @@ public class HQController extends MessageCenter implements Initializable {
 
         int id = 0;
 
-        for (int x = 2; x < gridSize; x += 5) {
-            for (int y = 2; y < gridSize; y += 5) {
+        for (int x = 2; x < 40; x += 5) {
+            for (int y = 2; y < 40; y += 5) {
 
                 buoys.put(id++, new Buoy(x, y));
 
             }
         }
     }
+
     private void addLog(String log) {
         Platform.runLater(() -> stausTextArea.appendText(log + "\n"));
     }

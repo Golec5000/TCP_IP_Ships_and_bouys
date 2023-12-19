@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import org.application.ship_fx.enums.Direction;
 import org.application.ship_fx.massage.MessageCenter;
 
 import java.io.IOException;
@@ -91,14 +92,14 @@ public class ShipController extends MessageCenter implements Initializable {
 
         executorService = Executors.newFixedThreadPool(2);
 
-        nButton.setOnAction(e -> moving(0, -1));
-        eButton.setOnAction(e -> moving(1, 0));
-        sButton.setOnAction(e -> moving(0, 1));
-        wButton.setOnAction(e -> moving(-1, 0));
-        neButton.setOnAction(e -> moving(1, -1));
-        nwButton.setOnAction(e -> moving(-1, -1));
-        seButton.setOnAction(e -> moving(1, 1));
-        swButton.setOnAction(e -> moving(-1, 1));
+        nButton.setOnAction(e -> moving(Direction.NORTH));
+        eButton.setOnAction(e -> moving(Direction.EAST));
+        sButton.setOnAction(e -> moving(Direction.SOUTH));
+        wButton.setOnAction(e -> moving(Direction.WEST));
+        neButton.setOnAction(e -> moving(Direction.NORTHEAST));
+        nwButton.setOnAction(e -> moving(Direction.NORTHWEST));
+        seButton.setOnAction(e -> moving(Direction.SOUTHEAST));
+        swButton.setOnAction(e -> moving(Direction.SOUTHWEST));
 
         scanButton.setOnAction(e -> sendMessage("scan", String.valueOf(port), sendingPort));
 
@@ -146,8 +147,6 @@ public class ShipController extends MessageCenter implements Initializable {
                 String command = receiveMessage();
                 if (command != null) {
                     commands.add(command);
-                } else {
-                    System.out.println("Received null message");
                 }
             }
 
@@ -234,8 +233,8 @@ public class ShipController extends MessageCenter implements Initializable {
 
     }
 
-    private void moving(int x, int y) {
-        String msgToSend = port + "," + x + "," + y;
+    private void moving(Direction direction) {
+        String msgToSend = port + "," + direction.getX() + "," + direction.getY();
         sendMessage("ShipMove", msgToSend, sendingPort);
     }
 

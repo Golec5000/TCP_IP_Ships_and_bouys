@@ -114,8 +114,6 @@ public class SeaController extends MessageCenter implements Initializable {
                 if (command != null) {
                     System.out.println(command);
                     commands.add(command);
-                } else {
-                    System.out.println("Received null message");
                 }
 
             }
@@ -277,11 +275,11 @@ public class SeaController extends MessageCenter implements Initializable {
         }
     }
 
-    private void depthOfBuoys(){
+    private void depthOfBuoys() {
 
         StringBuilder sb = new StringBuilder();
         ships.forEach((key, value) -> sb.append(value.cordForBuoys()));
-        sendMessage("buoys",sb.toString(),sendingPort);
+        sendMessage("buoys", sb.toString(), sendingPort);
 
     }
 
